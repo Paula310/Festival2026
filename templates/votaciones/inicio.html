@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block contenido %}
+<section class="hero">
+  <h1>Festival de Votaciones</h1>
+  <p>Consulta las ediciones del festival, sus categorías y las votaciones con sus opciones participantes.</p>
+</section>
+
+{% if edicion_actual %}
+<section>
+  <h2>Edición destacada</h2>
+  <article class="tarjeta tarjeta--grande">
+    <span class="etiqueta">{% if edicion_actual.activa %}Edición activa{% else %}Edición más reciente{% endif %}</span>
+    <h3>{{ edicion_actual.nombre }} <small>({{ edicion_actual.anio }})</small></h3>
+    <p>{{ edicion_actual.descripcion }}</p>
+    <p class="meta">{{ edicion_actual.fecha_inicio|date:"d/m/Y" }} – {{ edicion_actual.fecha_fin|date:"d/m/Y" }} · {{ edicion_actual.total_categorias }} categorías</p>
+    <a class="boton" href="{% url 'votaciones:edicion' edicion_actual.anio %}">Ver categorías</a>
+  </article>
+</section>
+
+<section>
+  <h2>Todas las ediciones</h2>
+  <div class="rejilla">
+    {% for e in ediciones %}
+    <a class="tarjeta enlace" href="{% url 'votaciones:edicion' e.anio %}">
+      <h3>{{ e.anio }}</h3>
+      <p>{{ e.nombre }}</p>
+      <p class="meta">{{ e.total_categorias }} categorías</p>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<p class="vacio">Aún no hay ediciones registradas. Un administrador puede crearlas desde el panel de administración.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}Registro · Festival de Votaciones{% endblock %}
+{% block contenido %}
+<section class="formulario">
+  <h1>Crear cuenta</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for campo in form %}
+      <div class="campo">
+        {{ campo.label_tag }} {{ campo }}
+        {% if campo.help_text %}<small>{{ campo.help_text|safe }}</small>{% endif %}
+        {% for e in campo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="boton">Registrarme</button>
+  </form>
+  <p>¿Ya tienes cuenta? <a href="{% url 'cuentas:login' %}">Inicia sesión</a></p>
+</section>
+{% endblock %}

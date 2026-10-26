@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Ediciones · Festival de Votaciones{% endblock %}
+{% block contenido %}
+<h1>Ediciones del Festival</h1>
+<table class="tabla">
+  <thead><tr><th>Año</th><th>Nombre</th><th>Periodo</th><th>Categorías</th><th>Estado</th></tr></thead>
+  <tbody>
+  {% for e in ediciones %}
+    <tr>
+      <td><a href="{% url 'votaciones:edicion' e.anio %}">{{ e.anio }}</a></td>
+      <td>{{ e.nombre }}</td>
+      <td>{{ e.fecha_inicio|date:"d/m/Y" }} – {{ e.fecha_fin|date:"d/m/Y" }}</td>
+      <td>{{ e.total_categorias }}</td>
+      <td>{% if e.activa %}<span class="etiqueta etiqueta--ok">Activa</span>{% else %}<span class="etiqueta">Archivada</span>{% endif %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5" class="vacio">No hay ediciones registradas.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

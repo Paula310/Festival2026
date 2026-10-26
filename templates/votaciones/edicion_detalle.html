@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}{{ edicion.nombre }} · Festival de Votaciones{% endblock %}
+{% block contenido %}
+<nav class="migas"><a href="{% url 'votaciones:ediciones' %}">Ediciones</a> › {{ edicion.anio }}</nav>
+<h1>{{ edicion.nombre }} <small>({{ edicion.anio }})</small></h1>
+<p>{{ edicion.descripcion }}</p>
+<p class="meta">{{ edicion.fecha_inicio|date:"d/m/Y" }} – {{ edicion.fecha_fin|date:"d/m/Y" }}</p>
+
+<h2>Categorías</h2>
+<div class="rejilla">
+  {% for c in categorias %}
+  <a class="tarjeta enlace" href="{% url 'votaciones:categoria' c.pk %}">
+    <h3>{{ c.nombre }}</h3>
+    <p>{{ c.descripcion|truncatechars:110 }}</p>
+    <p class="meta">{{ c.total_votaciones }} votación{{ c.total_votaciones|pluralize:",es" }}</p>
+  </a>
+  {% empty %}
+  <p class="vacio">Esta edición aún no tiene categorías.</p>
+  {% endfor %}
+</div>
+{% endblock %}

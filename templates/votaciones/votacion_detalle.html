@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}{{ votacion.titulo }} · Festival de Votaciones{% endblock %}
+{% block contenido %}
+<nav class="migas">
+  <a href="{% url 'votaciones:ediciones' %}">Ediciones</a> ›
+  <a href="{% url 'votaciones:edicion' votacion.categoria.edicion.anio %}">{{ votacion.categoria.edicion.anio }}</a> ›
+  <a href="{% url 'votaciones:categoria' votacion.categoria.pk %}">{{ votacion.categoria.nombre }}</a> ›
+  {{ votacion.titulo }}
+</nav>
+<h1>{{ votacion.titulo }}</h1>
+<p>{{ votacion.descripcion }}</p>
+<p class="meta">
+  <span class="etiqueta etiqueta--{{ votacion.estado }}">{{ votacion.get_estado_display }}</span>
+  Abre {{ votacion.fecha_apertura|date:"d/m/Y H:i" }} · Cierra {{ votacion.fecha_cierre|date:"d/m/Y H:i" }}
+</p>
+
+<h2>Opciones participantes</h2>
+<ol class="opciones">
+  {% for o in votacion.opciones.all %}
+  <li class="tarjeta">
+    <h3>{{ o.nombre }}</h3>
+    <p>{{ o.descripcion }}</p>
+  </li>
+  {% empty %}
+  <li class="vacio">Esta votación aún no tiene opciones.</li>
+  {% endfor %}
+</ol>
+
+<p class="nota">El registro de votos estará disponible en la siguiente entrega.</p>
+{% endblock %}

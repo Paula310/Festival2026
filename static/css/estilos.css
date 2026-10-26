@@ -1,0 +1,71 @@
+:root {
+  --fondo: #f6f4fb;
+  --texto: #1f1b2e;
+  --suave: #6b6580;
+  --primario: #5b3df5;
+  --primario-osc: #4326d1;
+  --borde: #e2def0;
+  --tarjeta: #ffffff;
+  --ok: #1f8f5f;
+  --aviso: #b7791f;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fondo); color: var(--texto); line-height: 1.55; }
+.contenedor { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+a { color: var(--primario); }
+h1 { font-size: 2rem; margin: 1.2rem 0 .4rem; }
+h1 small { color: var(--suave); font-weight: 400; }
+h2 { margin-top: 2rem; }
+
+.barra { background: #22194f; color: #fff; }
+.barra__fila { display: flex; align-items: center; justify-content: space-between; min-height: 60px; gap: 16px; flex-wrap: wrap; }
+.marca { color: #fff; font-weight: 700; font-size: 1.15rem; text-decoration: none; }
+.menu { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.menu a { color: #dcd6ff; text-decoration: none; }
+.menu a:hover { color: #fff; }
+.menu__usuario { color: #b9b0ff; font-size: .95rem; }
+.menu__form { margin: 0; }
+
+.boton { display: inline-block; background: var(--primario); color: #fff !important; border: 0; padding: 9px 16px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+.boton:hover { background: var(--primario-osc); }
+.boton--linea { background: transparent; border: 1px solid #8f84e6; color: #dcd6ff !important; }
+.boton--linea:hover { background: rgba(255,255,255,.1); }
+
+.hero { padding: 28px 0 8px; }
+.hero p { color: var(--suave); font-size: 1.1rem; max-width: 640px; }
+
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; padding: 18px; }
+.tarjeta h3 { margin: .3rem 0; }
+.tarjeta--grande { padding: 26px; }
+.enlace { text-decoration: none; color: inherit; transition: transform .12s, box-shadow .12s; }
+.enlace:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(67,38,209,.12); }
+.meta { color: var(--suave); font-size: .92rem; }
+
+.etiqueta { display: inline-block; font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ece9fb; color: var(--primario-osc); }
+.etiqueta--ok, .etiqueta--abierta { background: #dff5ea; color: var(--ok); }
+.etiqueta--borrador { background: #fdf0d5; color: var(--aviso); }
+.etiqueta--cerrada { background: #ececec; color: #555; }
+
+.tabla { width: 100%; border-collapse: collapse; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; overflow: hidden; }
+.tabla th, .tabla td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--borde); }
+.tabla th { background: #efecfb; font-size: .9rem; }
+
+.migas { color: var(--suave); margin-top: 18px; font-size: .92rem; }
+.opciones { list-style: none; padding: 0; display: grid; gap: 12px; }
+.vacio { color: var(--suave); font-style: italic; }
+.nota { margin-top: 28px; padding: 12px 16px; background: #eef; border-left: 4px solid var(--primario); border-radius: 6px; color: var(--suave); }
+
+.formulario { max-width: 460px; margin: 30px auto; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 26px; }
+.campo { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+.campo label { font-weight: 600; }
+.campo input { padding: 9px 11px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; }
+.campo small { color: var(--suave); }
+.campo small ul { margin: 4px 0 0; padding-left: 18px; }
+.error { color: #c0392b; margin: 0; font-size: .9rem; }
+
+.mensajes { list-style: none; padding: 0; margin: 16px 0 0; }
+.mensaje { padding: 10px 14px; border-radius: 8px; background: #dff5ea; color: var(--ok); border: 1px solid #b7e4cc; }
+.mensaje--error { background: #fde8e8; color: #c0392b; border-color: #f5c2c2; }
+
+.pie { margin-top: 60px; padding: 22px 0; color: var(--suave); border-top: 1px solid var(--borde); font-size: .9rem; }

@@ -1,0 +1,44 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Festival de Votaciones{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body>
+  <header class="barra">
+    <div class="contenedor barra__fila">
+      <a class="marca" href="{% url 'votaciones:inicio' %}">★ Festival de Votaciones</a>
+      <nav class="menu">
+        <a href="{% url 'votaciones:inicio' %}">Inicio</a>
+        <a href="{% url 'votaciones:ediciones' %}">Ediciones</a>
+        {% if user.is_staff %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
+        {% if user.is_authenticated %}
+          <span class="menu__usuario">Hola, {{ user.first_name|default:user.username }}</span>
+          <form method="post" action="{% url 'cuentas:logout' %}" class="menu__form">
+            {% csrf_token %}
+            <button type="submit" class="boton boton--linea">Cerrar sesión</button>
+          </form>
+        {% else %}
+          <a href="{% url 'cuentas:login' %}">Iniciar sesión</a>
+          <a class="boton" href="{% url 'cuentas:registro' %}">Registrarse</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    {% if messages %}
+      <ul class="mensajes">
+        {% for m in messages %}<li class="mensaje mensaje--{{ m.tags }}">{{ m }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor">Festival de Votaciones · Entrega 2 · Django + MySQL</div>
+  </footer>
+</body>
+</html>
