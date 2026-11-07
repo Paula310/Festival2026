@@ -96,5 +96,3 @@ LOGIN_URL = "cuentas:login"
 LOGIN_REDIRECT_URL = "votaciones:inicio"
 LOGOUT_REDIRECT_URL = "votaciones:inicio"
 
-import django.db.backends.base.base
-django.db.backends.base.base.BaseDatabaseWrapper.check_database_version_supported = lambda self: None
