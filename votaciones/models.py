@@ -29,7 +29,7 @@ class Edicion(models.Model):
 class Categoria(models.Model):
     """Categoría de premiación perteneciente a una edición."""
 
-    edicion = models.ForeignKey(Edicion, on_delete=models.CASCADE, related_name="categorias")
+    edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="categorias")
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField(blank=True)
     orden = models.PositiveSmallIntegerField(default=0)
@@ -54,7 +54,7 @@ class Votacion(models.Model):
         ABIERTA = "abierta", "Abierta"
         CERRADA = "cerrada", "Cerrada"
 
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="votaciones")
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votaciones")
     titulo = models.CharField("título", max_length=200)
     descripcion = models.TextField(blank=True)
     fecha_apertura = models.DateTimeField()

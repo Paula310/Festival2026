@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.db.models import ProtectedError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -44,9 +45,22 @@ class ModelosTests(TestCase):
         with self.assertRaises(ValidationError):
             v.full_clean()
 
-    def test_eliminar_edicion_en_cascada(self):
+    def test_no_se_puede_eliminar_edicion_con_categorias(self):
         ed, *_ = crear_jerarquia()
-        ed.delete()
+        with self.assertRaises(ProtectedError):
+            ed.delete()
+        self.assertTrue(Edicion.objects.filter(pk=ed.pk).exists())
+        self.assertEqual(Opcion.objects.count(), 1)
+
+    def test_no_se_puede_eliminar_categoria_con_votaciones(self):
+        _, cat, *_ = crear_jerarquia()
+        with self.assertRaises(ProtectedError):
+            cat.delete()
+        self.assertTrue(Categoria.objects.filter(pk=cat.pk).exists())
+
+    def test_eliminar_votacion_borra_sus_opciones(self):
+        _, _, vot, _ = crear_jerarquia()
+        vot.delete()
         self.assertEqual(Opcion.objects.count(), 0)
 
 
