@@ -1,11 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 class Edicion(models.Model):
     """Edición anual del Festival (p. ej. 2026)."""
-
     anio = models.PositiveIntegerField("año", unique=True)
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField(blank=True)
@@ -28,11 +28,11 @@ class Edicion(models.Model):
 
 class Categoria(models.Model):
     """Categoría de premiación perteneciente a una edición."""
-
     edicion = models.ForeignKey(Edicion, on_delete=models.CASCADE, related_name="categorias")
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField(blank=True)
     orden = models.PositiveSmallIntegerField(default=0)
+    activa = models.BooleanField("habilitada para votar", default=True)
 
     class Meta:
         verbose_name = "categoría"
@@ -47,8 +47,7 @@ class Categoria(models.Model):
 
 
 class Votacion(models.Model):
-    """Votación asociada a una categoría; agrupa las opciones participantes."""
-
+    """Votación (subevento) asociada a una categoría; agrupa las opciones participantes."""
     class Estado(models.TextChoices):
         BORRADOR = "borrador", "Borrador"
         ABIERTA = "abierta", "Abierta"
@@ -60,7 +59,6 @@ class Votacion(models.Model):
     fecha_apertura = models.DateTimeField()
     fecha_cierre = models.DateTimeField()
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.BORRADOR)
-    # Se usará en la siguiente entrega para restringir la cantidad de votos por usuario.
     votos_por_usuario = models.PositiveSmallIntegerField(default=1)
 
     class Meta:
@@ -78,15 +76,11 @@ class Votacion(models.Model):
     @property
     def esta_vigente(self):
         ahora = timezone.now()
-        return (
-            self.estado == self.Estado.ABIERTA
-            and self.fecha_apertura <= ahora <= self.fecha_cierre
-        )
+        return (self.estado == self.Estado.ABIERTA and self.fecha_apertura <= ahora <= self.fecha_cierre)
 
 
 class Opcion(models.Model):
     """Opción participante (candidato, obra o artista) dentro de una votación."""
-
     votacion = models.ForeignKey(Votacion, on_delete=models.CASCADE, related_name="opciones")
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
@@ -103,3 +97,31 @@ class Opcion(models.Model):
 
     def __str__(self):
         return self.nombre
+
+
+class Voto(models.Model):
+    """
+    Registro real de voto por usuario.
+    Regla central: Un solo voto por usuario, categoría y edición.
+    """
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="votos")
+    edicion = models.ForeignKey(Edicion, on_delete=models.CASCADE, related_name="votos")
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="votos")
+    votacion = models.ForeignKey(Votacion, on_delete=models.CASCADE, related_name="votos")
+    opcion = models.ForeignKey(Opcion, on_delete=models.CASCADE, related_name="votos")
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "voto"
+        verbose_name_plural = "votos"
+        ordering = ["-fecha_registro"]
+        constraints = [
+            # Restricción a nivel de BD para garantizar la regla de unicidad y evitar duplicados por concurrencia
+            models.UniqueConstraint(
+                fields=["usuario", "categoria", "edicion"],
+                name="voto_unico_usuario_categoria_edicion"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.usuario.username} -> {self.categoria.nombre} ({self.opcion.nombre})"
