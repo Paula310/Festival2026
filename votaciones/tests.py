@@ -90,6 +90,19 @@ class VistasPublicasTests(TestCase):
         r = self.client.get(reverse("votaciones:votacion", args=[self.vot.pk]))
         self.assertNotContains(r, "Oculta")
 
+    def test_borrador_no_se_muestra_en_la_categoria(self):
+        self.vot.estado = Votacion.Estado.BORRADOR
+        self.vot.save()
+        r = self.client.get(reverse("votaciones:categoria", args=[self.cat.pk]))
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, "Votación Canción 2026")
+
+    def test_borrador_da_404_por_url(self):
+        self.vot.estado = Votacion.Estado.BORRADOR
+        self.vot.save()
+        r = self.client.get(reverse("votaciones:votacion", args=[self.vot.pk]))
+        self.assertEqual(r.status_code, 404)
+
 
 class AuthTests(TestCase):
     def test_registro_crea_usuario_con_contrasena_hasheada_e_inicia_sesion(self):

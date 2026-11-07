@@ -12,7 +12,7 @@
   <a class="tarjeta enlace" href="{% url 'votaciones:categoria' c.pk %}">
     <h3>{{ c.nombre }}</h3>
     <p>{{ c.descripcion|truncatechars:110 }}</p>
-    <p class="meta">{{ c.total_votaciones }} votación{{ c.total_votaciones|pluralize:",es" }}</p>
+    <p class="meta">{{ c.total_votaciones }} votaci{{ c.total_votaciones|pluralize:"ón,ones" }}</p>
   </a>
   {% empty %}
   <p class="vacio">Esta edición aún no tiene categorías.</p>
