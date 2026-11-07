@@ -10,8 +10,9 @@ from pathlib import Path
 
 import pymysql
 
-# PyMySQL actúa como driver de MySQL (equivalente a mysqlclient, sin compilar).
-pymysql.version_info = (2, 2, 1, "final", 0)
+# PyMySQL es el conector entre Django y MySQL (como se vio en el taller del sábado).
+# Desde la versión 1.2, PyMySQL se identifica como compatible con Django 5.2,
+# por eso NO se modifica su número de versión (requirements.txt exige PyMySQL>=1.2).
 pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
