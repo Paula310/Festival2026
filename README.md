@@ -1,23 +1,42 @@
-# Festival de Votaciones — Entrega 3
+# Sistema Web de Votaciones – Festival de la Leyenda Vallenata 2027
 
-Plataforma web de votaciones del **Festival de la Leyenda Vallenata 2027** (proyecto académico de Desarrollo Web, Fundación Universitaria del Área Andina).
+Proyecto académico de **Desarrollo Web** (Fundación Universitaria del Área Andina) – **Entrega 3: registro de votos y control de unicidad**.
 
-**Tecnologías:** Python 3.12 · Django 5.2 LTS (patrón MVT) · MySQL 8 · PyMySQL 1.2
+Aplicación web construida con **Python 3.12, Django 5.2 LTS (patrón MVT) y MySQL 8** (conector PyMySQL 1.2).
 
-```
-EDICIÓN → CATEGORÍA → VOTACIÓN (subevento) → OPCIÓN
-                                   ↑
-        VOTO = usuario + edición + categoría + votación + opción
-```
+**Integrantes:** Paula Catalina Hincapié Huertas · Paula Andrea Cano Calvo · Jesús Daniel Vega Jiménez · Eliezer Omar Vielma Castro
 
-## Qué incluye
+**Tutor:** Deivys Morales Uribe · **NRC:** 4326-63
 
-| Entrega | Funcionalidad |
+---
+
+## Funcionalidades de esta entrega
+
+| Funcionalidad | Dirección |
 |---|---|
-| 2 | Ediciones, categorías, votaciones y opciones guardadas en MySQL; registro, inicio y cierre de sesión; interfaz pública |
-| 3 | **Registro de votos** con confirmación, **un voto por usuario, categoría y edición**, validaciones, historial "Mis votos", **panel administrativo de votos y resultados** y **API GET `/api/categorias/`** en JSON |
+| Opciones de una votación y formulario para votar (requiere sesión) | `/votaciones/<id>/` |
+| Confirmación y registro del voto (POST + CSRF) | `/votaciones/<id>/votar/` |
+| Historial de participación del usuario | `/mis-votos/` |
+| Panel administrativo: resultados y registro de votos (solo staff) | `/panel/votos/` |
+| **API GET**: categorías con sus votaciones y opciones en JSON | `/api/categorias/` |
 
-**Regla central:** cada usuario elige **una sola opción por categoría y edición**. Puede votar en otras categorías, pero no emitir un segundo voto en la misma, aunque tenga varios subeventos.
+**Regla central:** cada usuario elige **una sola opción por categoría y edición**. Puede votar en otras categorías, pero no emitir un segundo voto en la misma, aunque tenga varios subeventos. La regla se valida en Django y además la garantiza MySQL con un índice único.
+
+De la Entrega 2 se conservan: ediciones, categorías, votaciones y opciones en MySQL; registro, inicio y cierre de sesión; consulta pública (`/`, `/ediciones/`, `/ediciones/<año>/`, `/categorias/<id>/`). Las votaciones en **borrador** no se muestran al público.
+
+## Modelo de datos
+
+```
+Edicion ──1:N──► Categoria ──1:N──► Votacion ──1:N──► Opcion
+
+Voto = usuario + edicion + categoria + votacion + opcion + fecha
+       UNIQUE (usuario, categoria, edicion)
+```
+
+- Una **categoría** pertenece a una edición y una **votación** (subevento) pertenece a una categoría (`PROTECT`: no se pueden borrar si tienen datos asociados).
+- Las **opciones** pertenecen a una votación (`CASCADE`).
+- Cada **voto** guarda quién votó, en qué edición, categoría, votación y por cuál opción. Todas sus relaciones son `PROTECT`, para conservar la trazabilidad.
+- La restricción `un_voto_por_usuario_categoria_edicion` impide en la base de datos un segundo voto del mismo usuario en la misma categoría y edición.
 
 ## Requisitos
 
