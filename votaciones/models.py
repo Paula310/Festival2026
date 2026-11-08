@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -60,9 +61,7 @@ class Votacion(models.Model):
     fecha_apertura = models.DateTimeField()
     fecha_cierre = models.DateTimeField()
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.BORRADOR)
-    # Se usará en la siguiente entrega para restringir la cantidad de votos por usuario.
-    votos_por_usuario = models.PositiveSmallIntegerField(default=1)
-
+    
     class Meta:
         verbose_name = "votación"
         verbose_name_plural = "votaciones"
@@ -103,3 +102,41 @@ class Opcion(models.Model):
 
     def __str__(self):
         return self.nombre
+
+
+class Voto(models.Model):
+    """Voto de un usuario por una opción.
+
+    Regla central de la Entrega 3: un usuario solo puede votar UNA vez por
+    categoría y edición, aunque la categoría tenga varias votaciones (subeventos).
+    """
+
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="votos")
+    edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="votos")
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votos")
+    votacion = models.ForeignKey(Votacion, on_delete=models.PROTECT, related_name="votos")
+    opcion = models.ForeignKey(Opcion, on_delete=models.PROTECT, related_name="votos")
+    fecha = models.DateTimeField("fecha del voto", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "voto"
+        verbose_name_plural = "votos"
+        ordering = ["-fecha"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "categoria", "edicion"],
+                name="un_voto_por_usuario_categoria_edicion",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario} → {self.opcion} ({self.categoria})"
+
+    def clean(self):
+        """Coherencia: la opción, la votación, la categoría y la edición deben corresponder."""
+        if self.opcion_id and self.votacion_id and self.opcion.votacion_id != self.votacion_id:
+            raise ValidationError("La opción no pertenece a esta votación.")
+        if self.votacion_id and self.categoria_id and self.votacion.categoria_id != self.categoria_id:
+            raise ValidationError("La votación no pertenece a esta categoría.")
+        if self.categoria_id and self.edicion_id and self.categoria.edicion_id != self.edicion_id:
+            raise ValidationError("La categoría no pertenece a esta edición.")

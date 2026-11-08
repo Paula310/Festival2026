@@ -1,7 +1,5 @@
 from django.contrib import admin
-
-from .models import Categoria, Edicion, Opcion, Votacion
-
+from .models import Categoria, Edicion, Opcion, Votacion, Voto
 
 class CategoriaInline(admin.TabularInline):
     model = Categoria
@@ -41,3 +39,21 @@ class OpcionAdmin(admin.ModelAdmin):
     list_display = ("nombre", "votacion", "orden", "activa")
     list_filter = ("activa", "votacion__categoria__edicion")
     search_fields = ("nombre",)
+
+
+@admin.register(Voto)
+class VotoAdmin(admin.ModelAdmin):
+    """Solo lectura: el Admin sirve para VERIFICAR los votos, no para crearlos ni cambiarlos."""
+
+    list_display = ("usuario", "edicion", "categoria", "votacion", "opcion", "fecha")
+    list_filter = ("edicion", "categoria")
+    search_fields = ("usuario__username", "opcion__nombre")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

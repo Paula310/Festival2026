@@ -5,16 +5,16 @@ Requisitos: Python 3.10+, MySQL 8 en ejecución y Git.
 ## 1. Descargar el proyecto y preparar Python
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd festival
+git clone https://github.com/Paula310/Festival2026.git
+cd Festival2026
 python -m venv venv
 venv\Scripts\activate          # Linux/Mac: source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 2. Crear la base de datos con datos de prueba
+## 2. Crear la base de datos
 
-Entra a MySQL (`mysql -u root -p`) y ejecuta, cambiando `TuClaveAqui` por la contraseña que prefieras:
+En MySQL Workbench (conectado como `root`), cambiando `TuClaveAqui` por la contraseña que prefieras:
 
 ```sql
 CREATE DATABASE festival_votaciones CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -22,17 +22,11 @@ CREATE USER 'festival'@'localhost' IDENTIFIED BY 'TuClaveAqui';
 GRANT ALL PRIVILEGES ON festival_votaciones.* TO 'festival'@'localhost';
 GRANT ALL PRIVILEGES ON test_festival_votaciones.* TO 'festival'@'localhost';
 FLUSH PRIVILEGES;
-EXIT;
 ```
 
-Carga la estructura y los datos de prueba (ediciones 2025 y 2026, categorías, votaciones y opciones):
+Las tablas se crean con las migraciones y los datos de prueba (ficticios) del Festival de la Leyenda Vallenata 2026 y 2027 con el comando `cargar_datos_prueba` (paso 4).
 
-```bash
-mysql -u root -p festival_votaciones < database/festival_votaciones.sql
-```
-
-> Alternativa sin el archivo `.sql`: `python manage.py migrate` y luego `python manage.py cargar_datos_prueba`.
-> En MySQL Workbench también puedes usar *File → Open SQL Script* sobre `database/festival_votaciones.sql` y ejecutarlo con la base `festival_votaciones` seleccionada.
+> El archivo `database/festival_votaciones.sql` corresponde a la Entrega 2 y no incluye la tabla de votos; para la Entrega 3 se usan `migrate` y `cargar_datos_prueba`.
 
 ## 3. Indicar la contraseña (variable de entorno, nunca en el código)
 
@@ -42,9 +36,11 @@ $env:DB_PASSWORD='TuClaveAqui'
 ```
 CMD: `set DB_PASSWORD=TuClaveAqui` · Linux/Mac: `export DB_PASSWORD='TuClaveAqui'`
 
-## 4. Crear un administrador y arrancar
+## 4. Aplicar migraciones, crear un administrador y arrancar
 
 ```bash
+python manage.py migrate                # crea las tablas, incluida la de votos
+python manage.py cargar_datos_prueba    # datos ficticios del Festival Vallenato
 python manage.py createsuperuser
 python manage.py runserver
 ```

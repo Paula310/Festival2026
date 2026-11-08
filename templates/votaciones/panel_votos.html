@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block titulo %}Panel de votos · Festival de Votaciones{% endblock %}
+{% block contenido %}
+<h1>Panel de votos <small>(administración)</small></h1>
+
+<form method="get" class="filtro">
+  <label for="edicion">Edición:</label>
+  <select name="edicion" id="edicion" onchange="this.form.submit()">
+    <option value="">Todas</option>
+    {% for e in ediciones %}
+    <option value="{{ e.anio }}" {% if anio == e.anio|stringformat:"s" %}selected{% endif %}>{{ e.anio }} · {{ e.nombre }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button type="submit" class="boton">Filtrar</button></noscript>
+</form>
+
+<p class="meta">Total de votos registrados: <strong>{{ total_votos }}</strong></p>
+
+<h2>Resultados por votación</h2>
+{% for v in votaciones %}
+<article class="tarjeta resultado">
+  <h3>{{ v.titulo }} <small class="meta">· {{ v.categoria.nombre }} · {{ v.categoria.edicion.anio }}</small></h3>
+  <table class="tabla">
+    <thead><tr><th>Opción</th><th>Votos</th></tr></thead>
+    <tbody>
+      {% for o in v.opciones.all %}
+      <tr><td>{{ o.nombre }}</td><td>{{ o.total_votos }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</article>
+{% empty %}
+<p class="vacio">Todavía no hay votos registrados.</p>
+{% endfor %}
+
+<h2>Registro de votos</h2>
+<table class="tabla">
+  <thead>
+    <tr><th>#</th><th>Usuario</th><th>Edición</th><th>Categoría</th><th>Votación</th><th>Opción</th><th>Fecha</th></tr>
+  </thead>
+  <tbody>
+    {% for voto in votos %}
+    <tr>
+      <td>{{ voto.pk }}</td>
+      <td>{{ voto.usuario.username }}</td>
+      <td>{{ voto.edicion.anio }}</td>
+      <td>{{ voto.categoria.nombre }}</td>
+      <td>{{ voto.votacion.titulo }}</td>
+      <td>{{ voto.opcion.nombre }}</td>
+      <td>{{ voto.fecha|date:"d/m/Y H:i:s" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="vacio">Sin registros.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
