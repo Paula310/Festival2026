@@ -8,7 +8,10 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Categoria, Edicion, Opcion, Votacion
+from unittest import mock
+
+from .models import Categoria, Edicion, Opcion, Votacion, Voto
+from .servicios import VotoRechazado, registrar_voto
 
 User = get_user_model()
 
@@ -137,3 +140,144 @@ class AuthTests(TestCase):
         r = self.client.post(reverse("cuentas:login"), {"username": "nadie", "password": "mala"})
         self.assertEqual(r.status_code, 200)
         self.assertNotIn("_auth_user_id", self.client.session)
+
+
+class VotosTests(TestCase):
+    """Pruebas funcionales obligatorias de la Entrega 3 (CP-01 a CP-10)."""
+
+    def setUp(self):
+        self.ed, self.cat, self.vot, self.op = crear_jerarquia()
+        self.op2 = Opcion.objects.create(votacion=self.vot, nombre="Río Abajo")
+        ahora = timezone.now()
+        # Un segundo subevento dentro de la MISMA categoría.
+        self.vot_b = Votacion.objects.create(
+            categoria=self.cat, titulo="Votación Canción 2026 (final)", estado="abierta",
+            fecha_apertura=ahora - timedelta(hours=1), fecha_cierre=ahora + timedelta(days=5))
+        self.op_b = Opcion.objects.create(votacion=self.vot_b, nombre="Semilla de Sol")
+        # Otra categoría de la misma edición.
+        self.cat2 = Categoria.objects.create(edicion=self.ed, nombre="Mejor Cortometraje")
+        self.vot2 = Votacion.objects.create(
+            categoria=self.cat2, titulo="Votación Corto 2026", estado="abierta",
+            fecha_apertura=ahora - timedelta(hours=1), fecha_cierre=ahora + timedelta(days=5))
+        self.op_corto = Opcion.objects.create(votacion=self.vot2, nombre="Marea Alta")
+        self.user = User.objects.create_user("votante", "v@example.com", "ClaveSegura#2026")
+        self.client.force_login(self.user)
+
+    def votar(self, votacion, opcion):
+        return self.client.post(
+            reverse("votaciones:votar", args=[votacion.pk]),
+            {"opcion": opcion.pk, "confirmado": "si"},
+        )
+
+    def test_cp01_voto_valido_se_registra(self):
+        r = self.client.post(reverse("votaciones:votar", args=[self.vot.pk]), {"opcion": self.op.pk})
+        self.assertContains(r, "Confirma tu voto")  # Paso de confirmación: aún no guarda.
+        self.assertEqual(Voto.objects.count(), 0)
+        r = self.votar(self.vot, self.op)
+        self.assertRedirects(r, reverse("votaciones:votacion", args=[self.vot.pk]))
+        voto = Voto.objects.get()
+        self.assertEqual(
+            (voto.usuario, voto.edicion, voto.categoria, voto.votacion, voto.opcion),
+            (self.user, self.ed, self.cat, self.vot, self.op),
+        )
+
+    def test_cp02_segundo_voto_misma_categoria_se_rechaza(self):
+        self.votar(self.vot, self.op)
+        self.votar(self.vot, self.op2)      # otra opción
+        self.votar(self.vot_b, self.op_b)   # otro subevento de la misma categoría
+        self.assertEqual(Voto.objects.filter(usuario=self.user, categoria=self.cat).count(), 1)
+        self.assertEqual(Voto.objects.get().opcion, self.op)
+
+    def test_cp03_voto_en_otra_categoria_se_permite(self):
+        self.votar(self.vot, self.op)
+        self.votar(self.vot2, self.op_corto)
+        self.assertEqual(Voto.objects.filter(usuario=self.user).count(), 2)
+
+    def test_cp04_sin_sesion_se_exige_autenticacion(self):
+        self.client.logout()
+        r = self.votar(self.vot, self.op)
+        self.assertEqual(r.status_code, 302)
+        self.assertIn(reverse("cuentas:login"), r.url)
+        self.assertEqual(Voto.objects.count(), 0)
+
+    def test_cp05_categoria_no_habilitada_se_rechaza(self):
+        self.vot.estado = Votacion.Estado.CERRADA
+        self.vot.save()
+        self.votar(self.vot, self.op)
+        ahora = timezone.now()
+        self.vot2.fecha_apertura = ahora + timedelta(days=1)  # todavía no abre
+        self.vot2.fecha_cierre = ahora + timedelta(days=2)
+        self.vot2.save()
+        self.votar(self.vot2, self.op_corto)
+        self.assertEqual(Voto.objects.count(), 0)
+
+    def test_cp06_opcion_de_otra_categoria_se_rechaza(self):
+        r = self.votar(self.vot, self.op_corto)
+        self.assertRedirects(r, reverse("votaciones:votacion", args=[self.vot.pk]))
+        self.assertEqual(Voto.objects.count(), 0)
+
+    def test_cp07_mis_votos_muestra_mis_registros(self):
+        self.votar(self.vot, self.op)
+        otro = User.objects.create_user("otro", "o@example.com", "ClaveSegura#2026")
+        registrar_voto(otro, self.vot2, self.op_corto.pk)
+        r = self.client.get(reverse("votaciones:mis_votos"))
+        self.assertContains(r, "Noches de Neón")
+        self.assertNotContains(r, "Marea Alta")  # el voto de otro usuario no aparece
+
+    def test_cp08_administrador_consulta_los_votos(self):
+        self.votar(self.vot, self.op)
+        r = self.client.get(reverse("votaciones:panel_votos"))
+        self.assertEqual(r.status_code, 302)  # un votante normal no entra al panel
+        admin = User.objects.create_user("admin", "a@example.com", "ClaveSegura#2026", is_staff=True)
+        self.client.force_login(admin)
+        r = self.client.get(reverse("votaciones:panel_votos"))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.context["total_votos"], Voto.objects.count())
+        self.assertContains(r, "votante")
+
+    def test_cp09_dos_solicitudes_simultaneas_dejan_un_solo_voto(self):
+        registrar_voto(self.user, self.vot, self.op.pk)
+        # Se simula que la segunda solicitud llegó antes de que la primera se guardara:
+        # la revisión en Django "no ve" el primer voto y el intento llega hasta MySQL.
+        with mock.patch("votaciones.servicios.ya_voto", return_value=False):
+            with self.assertRaises(VotoRechazado):
+                registrar_voto(self.user, self.vot, self.op2.pk)
+        self.assertEqual(Voto.objects.filter(usuario=self.user, categoria=self.cat).count(), 1)
+
+    def test_cp09_la_base_de_datos_impide_el_duplicado(self):
+        Voto.objects.create(usuario=self.user, edicion=self.ed, categoria=self.cat,
+                            votacion=self.vot, opcion=self.op)
+        with self.assertRaises(IntegrityError):
+            Voto.objects.create(usuario=self.user, edicion=self.ed, categoria=self.cat,
+                                votacion=self.vot_b, opcion=self.op_b)
+
+    def test_cp10_api_categorias_devuelve_json(self):
+        Votacion.objects.create(
+            categoria=self.cat, titulo="Borrador oculto", estado="borrador",
+            fecha_apertura=timezone.now(), fecha_cierre=timezone.now() + timedelta(days=1))
+        self.client.logout()
+        r = self.client.get("/api/categorias/")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r["Content-Type"], "application/json")
+        datos = r.json()
+        self.assertEqual(datos["total"], 2)
+        cancion = next(c for c in datos["categorias"] if c["nombre"] == "Mejor Canción")
+        self.assertEqual(cancion["edicion"]["anio"], 2026)
+        titulos = [v["titulo"] for v in cancion["votaciones"]]
+        self.assertIn("Votación Canción 2026", titulos)
+        self.assertNotIn("Borrador oculto", titulos)
+        opciones = [o["nombre"] for v in cancion["votaciones"] for o in v["opciones"]]
+        self.assertIn("Noches de Neón", opciones)
+
+    def test_api_solo_acepta_get(self):
+        self.assertEqual(self.client.post("/api/categorias/").status_code, 405)
+
+    def test_votar_exige_post_y_csrf(self):
+        self.assertEqual(self.client.get(reverse("votaciones:votar", args=[self.vot.pk])).status_code, 405)
+        from django.test import Client
+        cliente = Client(enforce_csrf_checks=True)
+        cliente.force_login(self.user)
+        r = cliente.post(reverse("votaciones:votar", args=[self.vot.pk]),
+                         {"opcion": self.op.pk, "confirmado": "si"})
+        self.assertEqual(r.status_code, 403)
+        self.assertEqual(Voto.objects.count(), 0)       

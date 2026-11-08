@@ -69,3 +69,16 @@ h2 { margin-top: 2rem; }
 .mensaje--error { background: #fde8e8; color: #c0392b; border-color: #f5c2c2; }
 
 .pie { margin-top: 60px; padding: 22px 0; color: var(--suave); border-top: 1px solid var(--borde); font-size: .9rem; }
+
+/* Entrega 3: votación */
+.opcion-voto { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; }
+.opcion-voto input { margin-top: 6px; transform: scale(1.2); }
+.opcion-voto:has(input:checked) { border-color: var(--primario); box-shadow: 0 0 0 2px var(--primario); }
+.aviso { margin: 16px 0; padding: 12px 16px; background: #fdf0d5; border-left: 4px solid var(--aviso); border-radius: 6px; }
+.aviso--ok { background: #dff5ea; border-left-color: var(--ok); }
+.destacado { color: var(--primario-osc); font-size: 1.2rem; }
+.formulario form a { margin-left: 12px; }
+.filtro { display: flex; gap: 10px; align-items: center; margin: 16px 0; }
+.filtro select { padding: 7px 10px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; }
+.resultado { margin-bottom: 16px; }
+.resultado .tabla { margin-top: 8px; }

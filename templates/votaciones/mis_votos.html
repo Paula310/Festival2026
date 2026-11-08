@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Mis votos · Festival de Votaciones{% endblock %}
+{% block contenido %}
+<h1>Mis votos</h1>
+<p class="meta">Categorías en las que ya participaste. Solo se permite un voto por categoría y edición.</p>
+<table class="tabla">
+  <thead>
+    <tr><th>Edición</th><th>Categoría</th><th>Votación</th><th>Mi opción</th><th>Fecha</th></tr>
+  </thead>
+  <tbody>
+    {% for v in votos %}
+    <tr>
+      <td>{{ v.edicion.anio }}</td>
+      <td>{{ v.categoria.nombre }}</td>
+      <td><a href="{% url 'votaciones:votacion' v.votacion.pk %}">{{ v.votacion.titulo }}</a></td>
+      <td><strong>{{ v.opcion.nombre }}</strong></td>
+      <td>{{ v.fecha|date:"d/m/Y H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="vacio">Aún no has votado en ninguna categoría.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

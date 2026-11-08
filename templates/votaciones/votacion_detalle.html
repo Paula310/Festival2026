@@ -14,7 +14,41 @@
   Abre {{ votacion.fecha_apertura|date:"d/m/Y H:i" }} · Cierra {{ votacion.fecha_cierre|date:"d/m/Y H:i" }}
 </p>
 
+{% if voto_en_categoria %}
+  <p class="aviso aviso--ok">
+    Ya votaste en la categoría <strong>{{ votacion.categoria.nombre }}</strong>
+    por <strong>{{ voto_en_categoria.opcion.nombre }}</strong>
+    ({{ voto_en_categoria.fecha|date:"d/m/Y H:i" }}). Solo se permite un voto por categoría.
+    <a href="{% url 'votaciones:mis_votos' %}">Ver mis votos</a>
+  </p>
+{% elif not votacion.esta_vigente %}
+  <p class="aviso">Esta votación no está habilitada en este momento: no recibe votos.</p>
+{% elif not user.is_authenticated %}
+  <p class="aviso">
+    Para votar debes <a href="{% url 'cuentas:login' %}?next={{ request.path|urlencode }}">iniciar sesión</a>
+    o <a href="{% url 'cuentas:registro' %}">registrarte</a>.
+  </p>
+{% endif %}
+
 <h2>Opciones participantes</h2>
+{% if puede_votar and user.is_authenticated %}
+<form method="post" action="{% url 'votaciones:votar' votacion.pk %}">
+  {% csrf_token %}
+  <ol class="opciones">
+    {% for o in votacion.opciones.all %}
+    <li>
+      <label class="tarjeta opcion-voto">
+        <input type="radio" name="opcion" value="{{ o.pk }}" required>
+        <span><strong>{{ o.nombre }}</strong><br><span class="meta">{{ o.descripcion }}</span></span>
+      </label>
+    </li>
+    {% empty %}
+    <li class="vacio">Esta votación aún no tiene opciones.</li>
+    {% endfor %}
+  </ol>
+  <button type="submit" class="boton">Continuar</button>
+</form>
+{% else %}
 <ol class="opciones">
   {% for o in votacion.opciones.all %}
   <li class="tarjeta">
@@ -25,6 +59,5 @@
   <li class="vacio">Esta votación aún no tiene opciones.</li>
   {% endfor %}
 </ol>
-
-<p class="nota">El registro de votos estará disponible en la siguiente entrega.</p>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Confirmar voto · Festival de Votaciones{% endblock %}
+{% block contenido %}
+<section class="formulario">
+  <h1>Confirma tu voto</h1>
+  <p>Edición: <strong>{{ votacion.categoria.edicion.nombre }}</strong></p>
+  <p>Categoría: <strong>{{ votacion.categoria.nombre }}</strong></p>
+  <p>Votación: <strong>{{ votacion.titulo }}</strong></p>
+  <p>Tu elección: <strong class="destacado">{{ opcion.nombre }}</strong></p>
+  <p class="aviso">Solo puedes votar una vez en esta categoría. Después de confirmar no podrás cambiar tu voto.</p>
+  <form method="post" action="{% url 'votaciones:votar' votacion.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="opcion" value="{{ opcion.pk }}">
+    <input type="hidden" name="confirmado" value="si">
+    <button type="submit" class="boton">Confirmar voto</button>
+    <a href="{% url 'votaciones:votacion' votacion.pk %}">Cancelar</a>
+  </form>
+</section>
+{% endblock %}

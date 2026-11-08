@@ -13,7 +13,8 @@
       <nav class="menu">
         <a href="{% url 'votaciones:inicio' %}">Inicio</a>
         <a href="{% url 'votaciones:ediciones' %}">Ediciones</a>
-        {% if user.is_staff %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
+        {% if user.is_authenticated %}<a href="{% url 'votaciones:mis_votos' %}">Mis votos</a>{% endif %}
+        {% if user.is_staff %}<a href="{% url 'votaciones:panel_votos' %}">Panel de votos</a>{% endif %}
         {% if user.is_authenticated %}
           <span class="menu__usuario">Hola, {{ user.first_name|default:user.username }}</span>
           <form method="post" action="{% url 'cuentas:logout' %}" class="menu__form">
@@ -38,7 +39,7 @@
   </main>
 
   <footer class="pie">
-    <div class="contenedor">Festival de Votaciones · Entrega 2 · Django + MySQL</div>
+    <div class="contenedor">Festival de Votaciones · Entrega 3 · Django + MySQL</div>
   </footer>
 </body>
 </html>
